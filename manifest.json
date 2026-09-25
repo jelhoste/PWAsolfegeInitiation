@@ -1,0 +1,14 @@
+{
+  "name": "Solfège — cours, jeux & outils",
+  "short_name": "Solfège",
+  "description": "Cours de solfège, jeux de lecture de notes et de rythme, métronome, accordeur et piano virtuel.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FBF7EF",
+  "theme_color": "#1B2440",
+  "lang": "fr",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
