@@ -110,14 +110,17 @@ a{ color:inherit; }
 button{ font-family:inherit; }
 /* abcjs draws its own SVG with black presentation attributes; presentation attributes sit at the
    bottom of the CSS cascade, so a plain rule here reliably recolors every shape to the current theme. */
-.abc-notation{ overflow-x:auto; }
-.abc-notation svg{ width:100%; height:auto; display:block; }
+.abc-notation{ overflow-x:auto; overflow-y:visible; position:relative; }
+.abc-notation svg{ width:100% !important; height:auto !important; display:block; position:static !important; }
 .abc-notation svg path, .abc-notation svg text, .abc-notation svg rect,
 .abc-notation svg line, .abc-notation svg ellipse, .abc-notation svg polygon{
   fill:var(--fg) !important; stroke:var(--fg) !important;
 }
+/* Le bouton "Écouter" n'est jamais placé dans le conteneur de la portée : il est inséré juste
+   après, comme un bloc totalement séparé, pour ne jamais pouvoir être recouvert par le SVG. */
 .abc-play-btn{
-  display:block; margin:8px auto 0; padding:6px 16px; border-radius:999px;
+  position:relative; z-index:5; display:block; width:max-content; max-width:100%;
+  margin:10px auto 4px; padding:7px 18px; border-radius:999px;
   border:1px solid var(--rule-strong); background:var(--bg-3); color:var(--fg);
   font-size:.82rem; font-weight:600; cursor:pointer;
 }
@@ -235,8 +238,9 @@ table.durations th{ color:var(--fg-soft); font-weight:600; font-size:.8rem; text
 .hud-stat b{ color:var(--fg); font-size:1.1rem; display:block; font-family:'Fraunces',serif; }
 .staff-box{
   background: var(--bg-2); border:1px solid var(--rule); border-radius: var(--radius);
-  padding: 30px 20px; margin-bottom:26px; display:flex; justify-content:center;
+  padding: 30px 20px; margin-bottom:26px; display:flex; flex-direction:column; align-items:center; justify-content:center;
 }
+.staff-box .abc-notation{ width:100%; }
 .staff-box svg{ width:100%; max-width:420px; height:auto; overflow:visible; }
 .figure-wrap svg{ overflow:visible; }
 .ledger{ stroke:var(--fg-soft); stroke-width:1.4; }
@@ -1158,15 +1162,16 @@ function abcTune(clef, notesABC, key){
 }
 // Rend une chaîne ABC dans le conteneur donné (vide le conteneur d'abord pour ne pas empiler
 // les rendus successifs, utile pour les jeux qui regénèrent une note à chaque manche).
-// opts.audio = true ajoute un bouton "Écouter" qui rejoue la figure via le vrai synthétiseur d'abcjs.
+// opts.play = fonction de secours qui rejoue la figure via le synthétiseur maison si le
+// vrai module audio d'abcjs échoue (ou reste bloqué) dans cet environnement.
 function renderABC(containerId, abcString, opts){
   const el = document.getElementById(containerId);
   if (!el || typeof ABCJS === 'undefined') return null;
   el.innerHTML = '';
-  const finalOpts = Object.assign({add_classes:true, staffwidth:340, scale:1, paddingtop:0, paddingbottom:0, paddingleft:4, paddingright:4, responsive:'resize'}, opts||{});
+  const finalOpts = Object.assign({add_classes:true, staffwidth:340, scale:1, paddingtop:0, paddingbottom:0, paddingleft:4, paddingright:4}, opts||{});
   const tunes = ABCJS.renderAbc(containerId, abcString, finalOpts);
   const tune = tunes && tunes[0];
-  if (finalOpts.play) addPlayButton(containerId, finalOpts.play);
+  if (finalOpts.play) addPlayButton(containerId, tune, finalOpts.play);
   return tune;
 }
 let _sharedAudioCtx = null;
@@ -1209,27 +1214,57 @@ function playProgression(ctx, chords, opts){
   chords.forEach((chord,i)=> chord.forEach(n=> playTone(ctx, noteFreq(n[0],n[1],n[2]), now+i*step, dur)));
   return chords.length*step+0.35;
 }
-// Ajoute un bouton "Écouter" sous une figure abcjs. playFn(ctx) déclenche le son et renvoie sa
-// durée approximative en secondes. Petit synthétiseur maison (mêmes briques que le métronome et
-// le piano virtuel) : le rendu visuel reste entièrement assuré par abcjs, seul le son est local.
-function addPlayButton(containerId, playFn){
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise((_, reject)=> setTimeout(()=> reject(new Error('timeout')), ms))
+  ]);
+}
+// Ajoute un bouton "Écouter" JUSTE APRÈS le conteneur de la portée (jamais dedans), pour qu'il ne
+// puisse jamais se retrouver visuellement recouvert par le SVG dessiné par abcjs.
+// Essaie d'abord le vrai module audio d'abcjs (ABCJS.synth) ; s'il échoue ou reste bloqué plus de
+// 3 secondes (ex. requête réseau refusée), bascule automatiquement sur le synthétiseur maison
+// (fallbackPlayFn), sans que la personne n'ait à s'en soucier.
+function addPlayButton(containerId, visualObj, fallbackPlayFn){
   const host = document.getElementById(containerId);
-  if (!host || !playFn) return;
+  if (!host) return;
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'abc-play-btn';
   btn.textContent = '▶ Écouter';
-  host.appendChild(btn);
+  host.insertAdjacentElement('afterend', btn);
+  let synth = null;
+  let abcjsReady = !!(visualObj && typeof ABCJS !== 'undefined' && ABCJS.synth && ABCJS.synth.supportsAudio && ABCJS.synth.supportsAudio());
   btn.addEventListener('click', async ()=>{
     btn.disabled = true; btn.textContent = '♪ lecture…';
-    try{
-      const ctx = getSharedAudioCtx();
-      if (ctx.state === 'suspended') await ctx.resume();
-      const durationSec = playFn(ctx) || 1;
-      setTimeout(()=>{ btn.disabled=false; btn.textContent='▶ Réécouter'; }, Math.max(500, durationSec*1000));
-    }catch(e){
+    const ctx = getSharedAudioCtx();
+    try{ if (ctx.state === 'suspended') await ctx.resume(); }catch(e){}
+    if (abcjsReady){
+      try{
+        if (!synth){
+          synth = new ABCJS.synth.CreateSynth();
+          await withTimeout(synth.init({ audioContext: ctx, visualObj }), 3000);
+          await withTimeout(synth.prime(), 3000);
+        }
+        synth.start();
+        const ms = Math.max(700, (synth.duration || 1.2) * 1000 + 150);
+        setTimeout(()=>{ btn.disabled=false; btn.textContent='▶ Réécouter'; }, ms);
+        return;
+      }catch(e){
+        console.warn('abcjs synth indisponible, bascule sur le synthétiseur local:', e);
+        abcjsReady = false; synth = null;
+      }
+    }
+    if (fallbackPlayFn){
+      try{
+        const durationSec = fallbackPlayFn(ctx) || 1;
+        setTimeout(()=>{ btn.disabled=false; btn.textContent='▶ Réécouter'; }, Math.max(500, durationSec*1000));
+      }catch(e){
+        btn.textContent = '⚠ Son indisponible'; console.warn(e);
+        setTimeout(()=>{ btn.disabled=false; btn.textContent='▶ Écouter'; }, 1500);
+      }
+    } else {
       btn.textContent = '⚠ Son indisponible';
-      console.warn('lecture audio impossible:', e);
       setTimeout(()=>{ btn.disabled=false; btn.textContent='▶ Écouter'; }, 1500);
     }
   });
