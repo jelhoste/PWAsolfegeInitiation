@@ -13,7 +13,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,700;1,9..144,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/abcjs@6.5.1/dist/abcjs-basic-min.js"></script>
 <style>
 /* ============ TOKENS ============ */
@@ -116,6 +116,7 @@ button{ font-family:inherit; }
 .abc-notation svg line, .abc-notation svg ellipse, .abc-notation svg polygon{
   fill:var(--fg) !important; stroke:var(--fg) !important;
 }
+.abc-notation svg line, .abc-notation svg path{ stroke-width:1px; }
 /* Le bouton "Écouter" n'est jamais placé dans le conteneur de la portée : il est inséré juste
    après, comme un bloc totalement séparé, pour ne jamais pouvoir être recouvert par le SVG. */
 .abc-play-btn{
@@ -221,6 +222,7 @@ h1.hero-title{ font-size: clamp(2.1rem, 4.6vw, 3.4rem); line-height:1.08; margin
 }
 .figure-wrap{ margin:22px 0; padding:18px; border:1px solid var(--rule); border-radius:var(--radius); background:var(--bg-2); overflow-x:auto; }
 .figure-cap{ text-align:center; font-size:.82rem; color:var(--fg-soft); margin-top:8px; }
+.dyn-glyph{ font-family:'Fraunces',serif; font-style:italic; font-weight:800; font-size:1.9rem; line-height:1; }
 table.durations{ width:100%; border-collapse:collapse; font-size:.92rem; }
 table.durations th, table.durations td{ text-align:left; padding:10px 8px; border-bottom:1px solid var(--rule); }
 table.durations th{ color:var(--fg-soft); font-weight:600; font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; }
@@ -519,7 +521,7 @@ const LESSONS = [
       </div>
       <h3>L'exemple de Do majeur</h3>
       <p>En partant du Do, cette formule tombe exactement sur les touches blanches du piano : Do – Ré – Mi – Fa – Sol – La – Si – Do. Aucune altération n'est nécessaire, ce qui en fait la gamme la plus simple à visualiser, et souvent la première étudiée.</p>
-      <div class="figure-wrap"><svg viewBox="0 0 400 118" width="100%">${scaleToneKeyboardSVG()}</svg>
+      <div class="figure-wrap"><svg viewBox="0 0 400 152" width="100%">${scaleToneKeyboardSVG()}</svg>
         <p class="figure-cap">Chaque touche blanche est séparée de la suivante par un ton (T) ou un demi-ton (ST) — repère-les entre Mi-Fa et Si-Do : ce sont justement les deux demi-tons de la formule.</p>
       </div>
       <h3>Construire une autre gamme majeure</h3>
@@ -556,9 +558,9 @@ const LESSONS = [
       const mel = [['A',3],['B',3],['C',4],['D',4],['E',4]];
       const harmNotes = harm.concat([['G',4,'^'],['A',4,'']]);
       const melNotes = mel.concat([['F',4,'^'],['G',4,'^'],['A',4,'']]);
-      renderABC('abc-min-natural', abcTune('treble', nat.map(n=>toABC(n[0],n[1])).join('')), {staffwidth:340, play:(ctx)=>playMelody(ctx, nat)});
-      renderABC('abc-min-harmonic', abcTune('treble', harm.map(n=>toABC(n[0],n[1])).join('')+toABC('G',4,'^')+toABC('A',4)), {staffwidth:340, play:(ctx)=>playMelody(ctx, harmNotes)});
-      renderABC('abc-min-melodic', abcTune('treble', mel.map(n=>toABC(n[0],n[1])).join('')+toABC('F',4,'^')+toABC('G',4,'^')+toABC('A',4)), {staffwidth:340, play:(ctx)=>playMelody(ctx, melNotes)});
+      renderABC('abc-min-natural', abcTune('treble', nat.map(n=>toABC(n[0],n[1])).join(''), 'C', 200), {staffwidth:340, play:(ctx)=>playMelody(ctx, nat, {step:0.21,dur:0.2})});
+      renderABC('abc-min-harmonic', abcTune('treble', harm.map(n=>toABC(n[0],n[1])).join('')+toABC('G',4,'^')+toABC('A',4), 'C', 200), {staffwidth:340, play:(ctx)=>playMelody(ctx, harmNotes, {step:0.21,dur:0.2})});
+      renderABC('abc-min-melodic', abcTune('treble', mel.map(n=>toABC(n[0],n[1])).join('')+toABC('F',4,'^')+toABC('G',4,'^')+toABC('A',4), 'C', 200), {staffwidth:340, play:(ctx)=>playMelody(ctx, melNotes, {step:0.21,dur:0.2})});
     }
   },
   {
@@ -571,10 +573,14 @@ const LESSONS = [
         <table class="durations">
           <tr><th>Exemple depuis Do</th><th>Intervalle</th><th>Demi-tons</th></tr>
           <tr><td><div class="abc-notation dur-cell" id="itv-2"></div></td><td>2<sup>de</sup> majeure</td><td>2</td></tr>
+          <tr><td><div class="abc-notation dur-cell" id="itv-3m"></div></td><td>3<sup>ce</sup> mineure</td><td>3</td></tr>
           <tr><td><div class="abc-notation dur-cell" id="itv-3"></div></td><td>3<sup>ce</sup> majeure</td><td>4</td></tr>
           <tr><td><div class="abc-notation dur-cell" id="itv-4"></div></td><td>4<sup>te</sup> juste</td><td>5</td></tr>
+          <tr><td><div class="abc-notation dur-cell" id="itv-4a"></div></td><td>4<sup>te</sup> augmentée</td><td>6</td></tr>
           <tr><td><div class="abc-notation dur-cell" id="itv-5"></div></td><td>5<sup>te</sup> juste</td><td>7</td></tr>
+          <tr><td><div class="abc-notation dur-cell" id="itv-6m"></div></td><td>6<sup>te</sup> mineure</td><td>8</td></tr>
           <tr><td><div class="abc-notation dur-cell" id="itv-6"></div></td><td>6<sup>te</sup> majeure</td><td>9</td></tr>
+          <tr><td><div class="abc-notation dur-cell" id="itv-7m"></div></td><td>7<sup>me</sup> mineure</td><td>10</td></tr>
           <tr><td><div class="abc-notation dur-cell" id="itv-7"></div></td><td>7<sup>me</sup> majeure</td><td>11</td></tr>
           <tr><td><div class="abc-notation dur-cell" id="itv-8"></div></td><td>8<sup>ve</sup> juste</td><td>12</td></tr>
         </table>
@@ -588,10 +594,14 @@ const LESSONS = [
       const root = ['C',4,''];
       const mk = (target)=> Object.assign({}, opts, {play:(ctx)=>playMelody(ctx, [root, target], {step:0.55, dur:0.5})});
       renderABC('itv-2', abcTune('treble', c+toABC('D',4)), mk(['D',4,'']));
+      renderABC('itv-3m', abcTune('treble', c+toABC('E',4,'_')), mk(['E',4,'_']));
       renderABC('itv-3', abcTune('treble', c+toABC('E',4)), mk(['E',4,'']));
       renderABC('itv-4', abcTune('treble', c+toABC('F',4)), mk(['F',4,'']));
+      renderABC('itv-4a', abcTune('treble', c+toABC('F',4,'^')), mk(['F',4,'^']));
       renderABC('itv-5', abcTune('treble', c+toABC('G',4)), mk(['G',4,'']));
+      renderABC('itv-6m', abcTune('treble', c+toABC('A',4,'_')), mk(['A',4,'_']));
       renderABC('itv-6', abcTune('treble', c+toABC('A',4)), mk(['A',4,'']));
+      renderABC('itv-7m', abcTune('treble', c+toABC('B',4,'_')), mk(['B',4,'_']));
       renderABC('itv-7', abcTune('treble', c+toABC('B',4)), mk(['B',4,'']));
       renderABC('itv-8', abcTune('treble', c+toABC('C',5)), mk(['C',5,'']));
     }
@@ -638,13 +648,13 @@ const LESSONS = [
       <p>Au-delà des notes elles-mêmes, une partition précise aussi <em>comment</em> les jouer : à quel volume (les <strong>nuances</strong>) et à quelle vitesse (le <strong>tempo</strong>).</p>
       <h3>Les nuances</h3>
       <p>Indiquées par des abréviations italiennes placées sous la portée, du plus doux au plus fort :</p>
-      <div class="figure-wrap" style="display:flex; gap:18px; flex-wrap:wrap; justify-content:center; text-align:center; font-family:'Fraunces',serif;">
-        <div><div style="font-size:1.3rem;">pp</div><p style="margin:2px 0 0; font-size:.8rem;">pianissimo</p></div>
-        <div><div style="font-size:1.3rem;">p</div><p style="margin:2px 0 0; font-size:.8rem;">piano</p></div>
-        <div><div style="font-size:1.3rem;">mp</div><p style="margin:2px 0 0; font-size:.8rem;">mezzo-piano</p></div>
-        <div><div style="font-size:1.3rem;">mf</div><p style="margin:2px 0 0; font-size:.8rem;">mezzo-forte</p></div>
-        <div><div style="font-size:1.3rem;">f</div><p style="margin:2px 0 0; font-size:.8rem;">forte</p></div>
-        <div><div style="font-size:1.3rem;">ff</div><p style="margin:2px 0 0; font-size:.8rem;">fortissimo</p></div>
+      <div class="figure-wrap" style="display:flex; gap:22px; flex-wrap:wrap; justify-content:center; text-align:center;">
+        <div><div class="dyn-glyph">pp</div><p style="margin:4px 0 0; font-size:.8rem;">pianissimo</p></div>
+        <div><div class="dyn-glyph">p</div><p style="margin:4px 0 0; font-size:.8rem;">piano</p></div>
+        <div><div class="dyn-glyph">mp</div><p style="margin:4px 0 0; font-size:.8rem;">mezzo-piano</p></div>
+        <div><div class="dyn-glyph">mf</div><p style="margin:4px 0 0; font-size:.8rem;">mezzo-forte</p></div>
+        <div><div class="dyn-glyph">f</div><p style="margin:4px 0 0; font-size:.8rem;">forte</p></div>
+        <div><div class="dyn-glyph">ff</div><p style="margin:4px 0 0; font-size:.8rem;">fortissimo</p></div>
       </div>
       <p>Pour une évolution progressive plutôt qu'un changement brusque, on utilise un <strong>crescendo</strong> (on augmente peu à peu) ou un <strong>decrescendo</strong> / <strong>diminuendo</strong> (on diminue peu à peu), souvent notés par un « soufflet » qui s'ouvre ou se referme sous la portée.</p>
       <div class="figure-wrap" style="display:flex; gap:40px; justify-content:center; align-items:center; flex-wrap:wrap;">
@@ -686,8 +696,8 @@ const LESSONS = [
       <p>Au-delà de la triade, on peut empiler une tierce supplémentaire (accord de septième), ou resserrer/écarter les tierces pour obtenir des accords diminués ou augmentés — des nuances qu'il est temps d'explorer une fois ces deux accords de base bien reconnus à l'oreille.</p>
     `; },
     mount(){
-      renderABC('abc-chord-major', abcTune('treble', `[${toABC('C',4)}${toABC('E',4)}${toABC('G',4)}]`), {staffwidth:220, play:(ctx)=>playChord(ctx, [['C',4,''],['E',4,''],['G',4,'']])});
-      renderABC('abc-chord-minor', abcTune('treble', `[${toABC('A',3)}${toABC('C',4)}${toABC('E',4)}]`), {staffwidth:220, play:(ctx)=>playChord(ctx, [['A',3,''],['C',4,''],['E',4,'']])});
+      renderABC('abc-chord-major', abcTune('treble', `[${toABC('C',3)}${toABC('E',3)}${toABC('G',3)}]`), {staffwidth:220, play:(ctx)=>playChord(ctx, [['C',3,''],['E',3,''],['G',3,'']])});
+      renderABC('abc-chord-minor', abcTune('treble', `[${toABC('A',2)}${toABC('C',3)}${toABC('E',3)}]`), {staffwidth:220, play:(ctx)=>playChord(ctx, [['A',2,''],['C',3,''],['E',3,'']])});
     }
   },
   {
@@ -847,14 +857,14 @@ const LESSONS = [
         return out;
       };
       const run = (start,startOct)=> runNotes(start,startOct).map(n=>toABC(n[0],n[1])).join('');
-      const mk = (start,startOct)=> Object.assign({}, opts, {play:(ctx)=>playMelody(ctx, runNotes(start,startOct))});
-      renderABC('mode-ionien', abcTune('treble', run('C',4)), mk('C',4));
-      renderABC('mode-dorien', abcTune('treble', run('D',4)), mk('D',4));
-      renderABC('mode-phrygien', abcTune('treble', run('E',4)), mk('E',4));
-      renderABC('mode-lydien', abcTune('treble', run('F',4)), mk('F',4));
-      renderABC('mode-mixolydien', abcTune('treble', run('G',4)), mk('G',4));
-      renderABC('mode-eolien', abcTune('treble', run('A',4)), mk('A',4));
-      renderABC('mode-locrien', abcTune('treble', run('B',4)), mk('B',4));
+      const mk = (start,startOct)=> Object.assign({}, opts, {play:(ctx)=>playMelody(ctx, runNotes(start,startOct), {step:0.21,dur:0.2})});
+      renderABC('mode-ionien', abcTune('treble', run('C',3), 'C', 200), mk('C',3));
+      renderABC('mode-dorien', abcTune('treble', run('D',3), 'C', 200), mk('D',3));
+      renderABC('mode-phrygien', abcTune('treble', run('E',3), 'C', 200), mk('E',3));
+      renderABC('mode-lydien', abcTune('treble', run('F',3), 'C', 200), mk('F',3));
+      renderABC('mode-mixolydien', abcTune('treble', run('G',3), 'C', 200), mk('G',3));
+      renderABC('mode-eolien', abcTune('treble', run('A',3), 'C', 200), mk('A',3));
+      renderABC('mode-locrien', abcTune('treble', run('B',3), 'C', 200), mk('B',3));
     }
   },
   {
@@ -874,8 +884,8 @@ const LESSONS = [
       <div class="callout">Il existe aussi des accords de septième diminuée et demi-diminuée, plus instables encore, utilisés surtout comme accords de passage — une fois ces trois-là bien reconnus à l'oreille, ils s'apprivoisent facilement par comparaison.</div>
     `; },
     mount(){
-      renderABC('abc-maj7', abcTune('treble', `[${toABC('C',4)}${toABC('E',4)}${toABC('G',4)}${toABC('B',4)}]`), {staffwidth:200, play:(ctx)=>playChord(ctx, [['C',4,''],['E',4,''],['G',4,''],['B',4,'']])});
-      renderABC('abc-dom7', abcTune('treble', `[${toABC('G',4)}${toABC('B',4)}${toABC('D',5)}${toABC('F',5)}]`), {staffwidth:200, play:(ctx)=>playChord(ctx, [['G',4,''],['B',4,''],['D',5,''],['F',5,'']])});
+      renderABC('abc-maj7', abcTune('treble', `[${toABC('C',3)}${toABC('E',3)}${toABC('G',3)}${toABC('B',3)}]`), {staffwidth:200, play:(ctx)=>playChord(ctx, [['C',3,''],['E',3,''],['G',3,''],['B',3,'']])});
+      renderABC('abc-dom7', abcTune('treble', `[${toABC('G',3)}${toABC('B',3)}${toABC('D',4)}${toABC('F',4)}]`), {staffwidth:200, play:(ctx)=>playChord(ctx, [['G',3,''],['B',3,''],['D',4,''],['F',4,'']])});
       renderABC('abc-min7', abcTune('treble', `[${toABC('A',3)}${toABC('C',4)}${toABC('E',4)}${toABC('G',4)}]`), {staffwidth:200, play:(ctx)=>playChord(ctx, [['A',3,''],['C',4,''],['E',4,''],['G',4,'']])});
     }
   },
@@ -900,8 +910,8 @@ const LESSONS = [
       <div class="callout">Le cercle des quintes, vu plus tôt, est un excellent repère pour transposer : décaler d'une position sur le cercle revient à transposer d'une quinte, en ajoutant ou retirant une seule altération à l'armure.</div>
     `; },
     mount(){
-      renderABC('abc-transpose-before', abcTune('treble', toABC('C',4)+toABC('D',4)+toABC('E',4)+toABC('C',4), 'C'), {staffwidth:260, play:(ctx)=>playMelody(ctx, [['C',4,''],['D',4,''],['E',4,''],['C',4,'']])});
-      renderABC('abc-transpose-after', abcTune('treble', toABC('D',4)+toABC('E',4)+toABC('F',4)+toABC('D',4), 'D'), {staffwidth:260, play:(ctx)=>playMelody(ctx, [['D',4,''],['E',4,''],['F',4,'^'],['D',4,'']])});
+      renderABC('abc-transpose-before', abcTune('treble', toABC('C',4)+toABC('D',4)+toABC('E',4)+toABC('C',4), 'C', 150), {staffwidth:260, play:(ctx)=>playMelody(ctx, [['C',4,''],['D',4,''],['E',4,''],['C',4,'']], {step:0.28,dur:0.27})});
+      renderABC('abc-transpose-after', abcTune('treble', toABC('D',4)+toABC('E',4)+toABC('F',4)+toABC('D',4), 'D', 150), {staffwidth:260, play:(ctx)=>playMelody(ctx, [['D',4,''],['E',4,''],['F',4,'^'],['D',4,'']], {step:0.28,dur:0.27})});
     }
   },
   {
@@ -970,8 +980,8 @@ const LESSONS = [
     mount(){
       renderABC('abc-sub-i', abcTune('treble', `[${toABC('C',4)}${toABC('E',4)}${toABC('G',4)}]`), {staffwidth:150, play:(ctx)=>playChord(ctx, [['C',4,''],['E',4,''],['G',4,'']])});
       renderABC('abc-sub-vi', abcTune('treble', `[${toABC('A',3)}${toABC('C',4)}${toABC('E',4)}]`), {staffwidth:150, play:(ctx)=>playChord(ctx, [['A',3,''],['C',4,''],['E',4,'']])});
-      renderABC('abc-sub-g7', abcTune('treble', `[${toABC('G',4)}${toABC('B',4)}${toABC('D',5)}${toABC('F',5)}]`), {staffwidth:150, play:(ctx)=>playChord(ctx, [['G',4,''],['B',4,''],['D',5,''],['F',5,'']])});
-      renderABC('abc-sub-db7', abcTune('treble', `[${toABC('D',4,'_')}${toABC('F',4)}${toABC('A',4,'_')}${toABC('C',5,'_')}]`), {staffwidth:150, play:(ctx)=>playChord(ctx, [['D',4,'_'],['F',4,''],['A',4,'_'],['C',5,'_']])});
+      renderABC('abc-sub-g7', abcTune('treble', `[${toABC('G',3)}${toABC('B',3)}${toABC('D',4)}${toABC('F',4)}]`), {staffwidth:150, play:(ctx)=>playChord(ctx, [['G',3,''],['B',3,''],['D',4,''],['F',4,'']])});
+      renderABC('abc-sub-db7', abcTune('treble', `[${toABC('D',3,'_')}${toABC('F',3)}${toABC('A',3,'_')}${toABC('C',4,'_')}]`), {staffwidth:150, play:(ctx)=>playChord(ctx, [['D',3,'_'],['F',3,''],['A',3,'_'],['C',4,'_']])});
     }
   },
   {
@@ -998,9 +1008,9 @@ const LESSONS = [
       <p>La basse chiffrée décrit donc exactement les <strong>renversements</strong> déjà vus indirectement dans la leçon sur les accords : une même triade, jouée avec des notes différentes à la basse.</p>
     `; },
     mount(){
-      renderABC('abc-bc-root', abcTune('treble', `[${toABC('C',4)}${toABC('E',4)}${toABC('G',4)}]`), {staffwidth:150, play:(ctx)=>playChord(ctx, [['C',4,''],['E',4,''],['G',4,'']])});
-      renderABC('abc-bc-6', abcTune('treble', `[${toABC('E',4)}${toABC('G',4)}${toABC('C',5)}]`), {staffwidth:150, play:(ctx)=>playChord(ctx, [['E',4,''],['G',4,''],['C',5,'']])});
-      renderABC('abc-bc-64', abcTune('treble', `[${toABC('G',4)}${toABC('C',5)}${toABC('E',5)}]`), {staffwidth:150, play:(ctx)=>playChord(ctx, [['G',4,''],['C',5,''],['E',5,'']])});
+      renderABC('abc-bc-root', abcTune('treble', `[${toABC('C',3)}${toABC('E',3)}${toABC('G',3)}]`), {staffwidth:150, play:(ctx)=>playChord(ctx, [['C',3,''],['E',3,''],['G',3,'']])});
+      renderABC('abc-bc-6', abcTune('treble', `[${toABC('E',3)}${toABC('G',3)}${toABC('C',4)}]`), {staffwidth:150, play:(ctx)=>playChord(ctx, [['E',3,''],['G',3,''],['C',4,'']])});
+      renderABC('abc-bc-64', abcTune('treble', `[${toABC('G',3)}${toABC('C',4)}${toABC('E',4)}]`), {staffwidth:150, play:(ctx)=>playChord(ctx, [['G',3,''],['C',4,''],['E',4,'']])});
     }
   },
   {
@@ -1024,13 +1034,13 @@ const LESSONS = [
     `; },
     mount(){
       const opts = {staffwidth:200, scale:1.1};
-      const V = [['G',4,''],['B',4,''],['D',5,'']], I = [['C',4,''],['E',4,''],['G',4,'']];
-      const IV = [['F',4,''],['A',4,''],['C',5,'']], vi = [['A',4,''],['C',5,''],['E',5,'']];
+      const V = [['G',3,''],['B',3,''],['D',4,'']], I = [['C',3,''],['E',3,''],['G',3,'']];
+      const IV = [['F',3,''],['A',3,''],['C',4,'']], vi = [['A',3,''],['C',4,''],['E',4,'']];
       const mk = (a,b)=> Object.assign({}, opts, {play:(ctx)=>playProgression(ctx, [a,b])});
-      renderABC('abc-cad-parfaite', abcTune('treble', `[${toABC('G',4)}${toABC('B',4)}${toABC('D',5)}][${toABC('C',4)}${toABC('E',4)}${toABC('G',4)}]`), mk(V,I));
-      renderABC('abc-cad-plagale', abcTune('treble', `[${toABC('F',4)}${toABC('A',4)}${toABC('C',5)}][${toABC('C',4)}${toABC('E',4)}${toABC('G',4)}]`), mk(IV,I));
-      renderABC('abc-cad-imparfaite', abcTune('treble', `[${toABC('C',4)}${toABC('E',4)}${toABC('G',4)}][${toABC('G',4)}${toABC('B',4)}${toABC('D',5)}]`), mk(I,V));
-      renderABC('abc-cad-rompue', abcTune('treble', `[${toABC('G',4)}${toABC('B',4)}${toABC('D',5)}][${toABC('A',4)}${toABC('C',5)}${toABC('E',5)}]`), mk(V,vi));
+      renderABC('abc-cad-parfaite', abcTune('treble', `[${toABC('G',3)}${toABC('B',3)}${toABC('D',4)}][${toABC('C',3)}${toABC('E',3)}${toABC('G',3)}]`), mk(V,I));
+      renderABC('abc-cad-plagale', abcTune('treble', `[${toABC('F',3)}${toABC('A',3)}${toABC('C',4)}][${toABC('C',3)}${toABC('E',3)}${toABC('G',3)}]`), mk(IV,I));
+      renderABC('abc-cad-imparfaite', abcTune('treble', `[${toABC('C',3)}${toABC('E',3)}${toABC('G',3)}][${toABC('G',3)}${toABC('B',3)}${toABC('D',4)}]`), mk(I,V));
+      renderABC('abc-cad-rompue', abcTune('treble', `[${toABC('G',3)}${toABC('B',3)}${toABC('D',4)}][${toABC('A',3)}${toABC('C',4)}${toABC('E',4)}]`), mk(V,vi));
     }
   },
   {
@@ -1054,8 +1064,8 @@ const LESSONS = [
     mount(){
       const opts = {staffwidth:130, scale:1.1};
       const G=['G',4,''], A=['A',4,''], F=['F',4,''];
-      renderABC('orn-trille', abcTune('treble', '!trill!'+toABC('G',4)), Object.assign({},opts,{play:(ctx)=>playMelody(ctx,[G,A,G,A,G,A],{step:0.12,dur:0.13})}));
-      renderABC('orn-appog', abcTune('treble', `{${toABC('A',4)}}${toABC('G',4)}`), Object.assign({},opts,{play:(ctx)=>playMelody(ctx,[A,G],{step:0.16,dur:0.4})}));
+      renderABC('orn-trille', abcTune('treble', '!trill!'+toABC('G',4)+'/2'), Object.assign({},opts,{play:(ctx)=>playMelody(ctx,[G,A,G,A,G,A],{step:0.12,dur:0.13})}));
+      renderABC('orn-appog', abcTune('treble', `{${toABC('A',4)}}${toABC('G',4)}/4`), Object.assign({},opts,{play:(ctx)=>playMelody(ctx,[A,G],{step:0.08,dur:0.2})}));
       renderABC('orn-mordant', abcTune('treble', '!mordent!'+toABC('G',4)), Object.assign({},opts,{play:(ctx)=>playMelody(ctx,[G,F,G],{step:0.11,dur:0.13})}));
       renderABC('orn-mordant-sup', abcTune('treble', '!pralltriller!'+toABC('G',4)), Object.assign({},opts,{play:(ctx)=>playMelody(ctx,[G,A,G],{step:0.11,dur:0.13})}));
     }
@@ -1085,8 +1095,8 @@ const LESSONS = [
       renderABC('abc-chromatique',
         `X:1\nL:1/8\nK:C clef=treble\n${toABC('C',4)}${toABC('C',4,'^')}${toABC('D',4)}${toABC('D',4,'^')}${toABC('E',4)}${toABC('F',4)}${toABC('F',4,'^')}${toABC('G',4)}${toABC('G',4,'^')}${toABC('A',4)}${toABC('A',4,'^')}${toABC('B',4)}${toABC('C',5)}\n`,
         {staffwidth:400, play:(ctx)=>playMelody(ctx, chromNotes, {step:0.22, dur:0.2})});
-      renderABC('abc-passage', abcTune('treble', toABC('C',4)+toABC('D',4)+toABC('E',4)), {staffwidth:200, play:(ctx)=>playMelody(ctx, [['C',4,''],['D',4,''],['E',4,'']])});
-      renderABC('abc-voisine', abcTune('treble', toABC('C',4)+toABC('D',4)+toABC('C',4)), {staffwidth:200, play:(ctx)=>playMelody(ctx, [['C',4,''],['D',4,''],['C',4,'']])});
+      renderABC('abc-passage', abcTune('treble', toABC('C',4)+toABC('D',4)+toABC('E',4), 'C', 200), {staffwidth:200, play:(ctx)=>playMelody(ctx, [['C',4,''],['D',4,''],['E',4,'']], {step:0.21,dur:0.2})});
+      renderABC('abc-voisine', abcTune('treble', toABC('C',4)+toABC('D',4)+toABC('C',4), 'C', 200), {staffwidth:200, play:(ctx)=>playMelody(ctx, [['C',4,''],['D',4,''],['C',4,'']], {step:0.21,dur:0.2})});
     }
   },
   {
@@ -1130,10 +1140,11 @@ const LESSONS = [
     `; },
     mount(){
       const opts = {staffwidth:130, scale:1.1};
-      renderABC('art-staccato', abcTune('treble', '.'+toABC('G',4)), Object.assign({},opts,{play:(ctx)=>playMelody(ctx,[['G',4,'']],{step:0.5,dur:0.1})}));
-      renderABC('art-legato', abcTune('treble', `(${toABC('C',4)}${toABC('D',4)}${toABC('E',4)})`), Object.assign({},opts,{play:(ctx)=>playMelody(ctx,[['C',4,''],['D',4,''],['E',4,'']],{step:0.3,dur:0.45})}));
-      renderABC('art-tenuto', abcTune('treble', '!tenuto!'+toABC('G',4)), Object.assign({},opts,{play:(ctx)=>playMelody(ctx,[['G',4,'']],{step:0.5,dur:1.0})}));
-      renderABC('art-accent', abcTune('treble', '!accent!'+toABC('G',4)), Object.assign({},opts,{play:(ctx)=>playMelody(ctx,[['G',4,'']],{step:0.5,dur:0.35})}));
+      const violin = 41; // General MIDI : 41 = Violon
+      renderABC('art-staccato', abcTune('treble', '.'+toABC('G',4)), Object.assign({},opts,{program:violin, play:(ctx)=>playMelody(ctx,[['G',4,'']],{step:0.5,dur:0.1})}));
+      renderABC('art-legato', abcTune('treble', `(${toABC('C',4)}${toABC('D',4)}${toABC('E',4)})`), Object.assign({},opts,{program:violin, play:(ctx)=>playMelody(ctx,[['C',4,''],['D',4,''],['E',4,'']],{step:0.3,dur:0.45})}));
+      renderABC('art-tenuto', abcTune('treble', '!tenuto!'+toABC('G',4)), Object.assign({},opts,{program:violin, play:(ctx)=>playMelody(ctx,[['G',4,'']],{step:0.5,dur:1.0})}));
+      renderABC('art-accent', abcTune('treble', '!accent!'+toABC('G',4)), Object.assign({},opts,{program:violin, play:(ctx)=>playMelody(ctx,[['G',4,'']],{step:0.5,dur:0.35})}));
     }
   }
 ];
@@ -1156,9 +1167,10 @@ function toABC(letter, octave, accidental){
 }
 // Construit une mini-partition ABC prête à afficher : une portée avec une clé (et,
 // optionnellement, une armure via keySuffix, ex. " ♯F♯" -> on passe plutôt le nom abc, ex. 'G').
-function abcTune(clef, notesABC, key){
+function abcTune(clef, notesABC, key, qpm){
   key = key || 'C';
-  return `X:1\nL:1\nK:${key} clef=${clef}\n${notesABC}\n`;
+  const tempoLine = qpm ? `Q:1/4=${qpm}\n` : '';
+  return `X:1\nL:1\n${tempoLine}K:${key} clef=${clef}\n${notesABC}\n`;
 }
 // Rend une chaîne ABC dans le conteneur donné (vide le conteneur d'abord pour ne pas empiler
 // les rendus successifs, utile pour les jeux qui regénèrent une note à chaque manche).
@@ -1171,7 +1183,7 @@ function renderABC(containerId, abcString, opts){
   const finalOpts = Object.assign({add_classes:true, staffwidth:340, scale:1, paddingtop:0, paddingbottom:0, paddingleft:4, paddingright:4}, opts||{});
   const tunes = ABCJS.renderAbc(containerId, abcString, finalOpts);
   const tune = tunes && tunes[0];
-  if (finalOpts.play) addPlayButton(containerId, tune, finalOpts.play);
+  if (finalOpts.play) addPlayButton(containerId, tune, finalOpts.play, finalOpts.program);
   return tune;
 }
 let _sharedAudioCtx = null;
@@ -1184,6 +1196,8 @@ function noteFreq(letter, octave, accidental){
   const midi = (octave+1)*12 + semis;
   return 440*Math.pow(2,(midi-69)/12);
 }
+// Registre des oscillateurs en train de jouer, pour pouvoir tout couper d'un coup (lecture exclusive).
+let _activeOscNodes = [];
 function playTone(ctx, freq, startTime, dur){
   const osc = ctx.createOscillator(); const gain = ctx.createGain();
   osc.type = 'triangle'; osc.frequency.value = freq;
@@ -1192,6 +1206,8 @@ function playTone(ctx, freq, startTime, dur){
   gain.gain.exponentialRampToValueAtTime(0.0001, startTime+dur);
   osc.connect(gain); gain.connect(ctx.destination);
   osc.start(startTime); osc.stop(startTime+dur+0.03);
+  _activeOscNodes.push(osc);
+  osc.addEventListener('ended', ()=>{ const i=_activeOscNodes.indexOf(osc); if (i>=0) _activeOscNodes.splice(i,1); });
 }
 // notes: [[letter,octave,accidental?], ...] joué l'un après l'autre.
 function playMelody(ctx, notes, opts){
@@ -1220,12 +1236,19 @@ function withTimeout(promise, ms){
     new Promise((_, reject)=> setTimeout(()=> reject(new Error('timeout')), ms))
   ]);
 }
+// Lecture exclusive : démarrer une nouvelle lecture coupe d'abord tout ce qui était en cours
+// (synthé abcjs ou oscillateurs maison), et remet le bouton précédent dans son état normal.
+let _activeStopFn = null;
+function stopActivePlayback(){
+  if (_activeStopFn){ const fn = _activeStopFn; _activeStopFn = null; try{ fn(); }catch(e){} }
+}
 // Ajoute un bouton "Écouter" JUSTE APRÈS le conteneur de la portée (jamais dedans), pour qu'il ne
 // puisse jamais se retrouver visuellement recouvert par le SVG dessiné par abcjs.
 // Essaie d'abord le vrai module audio d'abcjs (ABCJS.synth) ; s'il échoue ou reste bloqué plus de
 // 3 secondes (ex. requête réseau refusée), bascule automatiquement sur le synthétiseur maison
-// (fallbackPlayFn), sans que la personne n'ait à s'en soucier.
-function addPlayButton(containerId, visualObj, fallbackPlayFn){
+// (fallbackPlayFn), sans que la personne n'ait à s'en soucier. `program` (optionnel) force un
+// instrument MIDI (General MIDI, 1-128) pour le rendu abcjs, ex. 41 = violon, 74 = flûte.
+function addPlayButton(containerId, visualObj, fallbackPlayFn, program){
   const host = document.getElementById(containerId);
   if (!host) return;
   const btn = document.createElement('button');
@@ -1235,20 +1258,32 @@ function addPlayButton(containerId, visualObj, fallbackPlayFn){
   host.insertAdjacentElement('afterend', btn);
   let synth = null;
   let abcjsReady = !!(visualObj && typeof ABCJS !== 'undefined' && ABCJS.synth && ABCJS.synth.supportsAudio && ABCJS.synth.supportsAudio());
+  const resetUI = ()=>{ btn.disabled=false; btn.textContent='▶ Écouter'; };
   btn.addEventListener('click', async ()=>{
+    stopActivePlayback();
     btn.disabled = true; btn.textContent = '♪ lecture…';
+    let stopTimer = null;
+    _activeStopFn = ()=>{
+      if (synth){ try{ synth.stop(); }catch(e){} }
+      _activeOscNodes.forEach(n=>{ try{ n.stop(0); }catch(e){} });
+      _activeOscNodes = [];
+      clearTimeout(stopTimer);
+      resetUI();
+    };
     const ctx = getSharedAudioCtx();
     try{ if (ctx.state === 'suspended') await ctx.resume(); }catch(e){}
     if (abcjsReady){
       try{
         if (!synth){
           synth = new ABCJS.synth.CreateSynth();
-          await withTimeout(synth.init({ audioContext: ctx, visualObj }), 3000);
+          const initOpts = { audioContext: ctx, visualObj };
+          if (program!=null){ initOpts.options = { program: program }; initOpts.program = program; }
+          await withTimeout(synth.init(initOpts), 3000);
           await withTimeout(synth.prime(), 3000);
         }
         synth.start();
         const ms = Math.max(700, (synth.duration || 1.2) * 1000 + 150);
-        setTimeout(()=>{ btn.disabled=false; btn.textContent='▶ Réécouter'; }, ms);
+        stopTimer = setTimeout(()=>{ if (_activeStopFn){ _activeStopFn=null; } btn.disabled=false; btn.textContent='▶ Réécouter'; }, ms);
         return;
       }catch(e){
         console.warn('abcjs synth indisponible, bascule sur le synthétiseur local:', e);
@@ -1258,13 +1293,15 @@ function addPlayButton(containerId, visualObj, fallbackPlayFn){
     if (fallbackPlayFn){
       try{
         const durationSec = fallbackPlayFn(ctx) || 1;
-        setTimeout(()=>{ btn.disabled=false; btn.textContent='▶ Réécouter'; }, Math.max(500, durationSec*1000));
+        stopTimer = setTimeout(()=>{ if (_activeStopFn){ _activeStopFn=null; } btn.disabled=false; btn.textContent='▶ Réécouter'; }, Math.max(500, durationSec*1000));
       }catch(e){
         btn.textContent = '⚠ Son indisponible'; console.warn(e);
+        _activeStopFn = null;
         setTimeout(()=>{ btn.disabled=false; btn.textContent='▶ Écouter'; }, 1500);
       }
     } else {
       btn.textContent = '⚠ Son indisponible';
+      _activeStopFn = null;
       setTimeout(()=>{ btn.disabled=false; btn.textContent='▶ Écouter'; }, 1500);
     }
   });
@@ -1298,8 +1335,8 @@ function scaleToneKeyboardSVG(){
   for (let i=0;i<whites-1;i++){
     const cx = (i+1)*w;
     const isST = intervals[i]==='ST';
-    s += `<text x="${cx}" y="16" text-anchor="middle" font-size="13" font-weight="700" font-family="'Fraunces',serif" fill="${isST?'#B14A3D':'#8C6D1F'}">${intervals[i]}</text>`;
-    s += `<line x1="${cx}" y1="20" x2="${cx}" y2="26" stroke="${isST?'#B14A3D':'#8C6D1F'}" stroke-width="2"/>`;
+    s += `<line x1="${cx}" y1="116" x2="${cx}" y2="130" stroke="${isST?'#B14A3D':'#8C6D1F'}" stroke-width="2"/>`;
+    s += `<text x="${cx}" y="144" text-anchor="middle" font-size="13" font-weight="700" font-family="'Fraunces',serif" fill="${isST?'#B14A3D':'#8C6D1F'}">${intervals[i]}</text>`;
   }
   return s;
 }
@@ -1320,7 +1357,9 @@ function circleOfFifthsSVG(){
 }
 // A crescendo (opening) or decrescendo (closing) hairpin.
 function hairpinSVG(kind){
-  const path = kind==='cresc' ? 'M4,8 L90,2 L4,26' : 'M90,8 L4,2 L90,26';
+  // Point at x=4 (crescendo) or x=90 (decrescendo), toujours à y=14 — le milieu exact entre y=2 et y=26 —
+  // de sorte que les deux branches forment des angles rigoureusement égaux, symétriques horizontalement.
+  const path = kind==='cresc' ? 'M4,14 L90,2 M4,14 L90,26' : 'M90,14 L4,2 M90,14 L4,26';
   return `<svg viewBox="0 0 96 28" width="100%" style="max-width:160px;"><path d="${path}" fill="none" stroke="var(--fg)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
 /* ======================================================================
